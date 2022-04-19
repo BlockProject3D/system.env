@@ -1,11 +1,11 @@
 [package]
-name = "test"
+name = "bp3d-env"
 version = "0.1.0"
 authors = ["Yuri Edward <yuri6037@outlook.com>"]
-edition = "2018"
-description = ""
+edition = "2021"
+description = "Environment utilities with environment override file to support systems with difficult to no access to environment variables."
 license = "BSD-3-Clause"
-repository = "https://gitlab.com/bp3d/test"
+repository = "https://gitlab.com/bp3d/env"
 readme = "./README.MD"
 keywords = []
 categories = []
