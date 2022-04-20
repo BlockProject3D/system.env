@@ -54,8 +54,8 @@ static ENV_CACHE: Lazy<Mutex<HashMap<OsString, Option<OsString>>>> =
 ///
 /// The function panics if the path does not point to a file.
 pub fn add_override_path(path: &Path) {
-    if !path.is_file() {
-        panic!("Cannot add non-file environment override path!")
+    if path.is_dir() || path.is_symlink() {
+        panic!("Cannot add non-file environment override path!");
     }
     let mut lock = PATHS.lock().unwrap();
     if lock.iter().any(|p| p == path) {
