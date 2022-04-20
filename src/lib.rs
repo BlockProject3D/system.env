@@ -57,7 +57,7 @@ pub fn add_override_path(path: &Path) {
         panic!("Cannot add non-file environment override path!")
     }
     let mut lock = PATHS.lock().unwrap();
-    if lock.iter().find(|p| **p == path).is_some() {
+    if lock.iter().any(|p| p == path) {
         return;
     }
     lock.push(path.into());
