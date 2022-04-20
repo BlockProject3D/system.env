@@ -66,30 +66,35 @@ pub fn add_override_path(path: &Path) {
     lock1.clear();
 }
 
-fn insert_key_value(
+fn check_insert_key_value(
     cache: &mut HashMap<OsString, Option<OsString>>,
+    searched: impl AsRef<OsStr>,
     key: impl AsRef<OsStr>,
-    value: impl AsRef<OsStr>,
-) {
-    if value.as_ref().is_empty() {
-        cache.insert(key.as_ref().into(), None);
+    value: impl AsRef<OsStr>
+) -> Option<Option<OsString>> {
+    if key.as_ref() == searched.as_ref() {
+        if value.as_ref().is_empty() {
+            cache.insert(key.as_ref().into(), None);
+        } else {
+            cache.insert(key.as_ref().into(), Some(value.as_ref().into()));
+        }
+        Some(cache[key.as_ref()].clone())
     } else {
-        cache.insert(key.as_ref().into(), Some(value.as_ref().into()));
+        None
     }
 }
 
 #[cfg(windows)]
-fn windows_path(cache: &mut HashMap<OsString, Option<OsString>>, data: &[u8], pos: usize) -> bool {
+fn windows_path(cache: &mut HashMap<OsString, Option<OsString>>, searched: impl AsRef<OsStr>, data: &[u8], pos: usize) -> Option<Option<OsString>> {
     let key = match std::str::from_utf8(&data[..pos]) {
         Ok(v) => v,
-        Err(_) => return false,
+        Err(_) => return None,
     };
     let value = match std::str::from_utf8(&data[pos + 1..]) {
         Ok(v) => v,
-        Err(_) => return false,
+        Err(_) => return None,
     };
-    insert_key_value(cache, key, value);
-    true
+    check_insert_key_value(cache, searched, key, value)
 }
 
 /// Gets the content of an environment variable.
@@ -113,10 +118,8 @@ pub fn get_os<T: AsRef<OsStr>>(name: T) -> Option<OsString> {
     {
         // Value is not in cache, try pulling from environment variables.
         if let Some(val) = std::env::var_os(name.as_ref()) {
-            cache.insert(name.as_ref().into(), Some(val));
-        }
-        if let Some(val) = cache.get(name.as_ref()) {
-            return val.clone();
+            cache.insert(name.as_ref().into(), Some(val.clone()));
+            return Some(val.clone());
         }
     }
     {
@@ -138,8 +141,8 @@ pub fn get_os<T: AsRef<OsStr>>(name: T) -> Option<OsString> {
                     None => continue,
                 };
                 #[cfg(windows)]
-                if !windows_path(&mut cache, &data, pos) {
-                    continue;
+                if let Some(res) = windows_path(&mut cache, name.as_ref(), &data, pos) {
+                    return res;
                 }
                 #[cfg(unix)]
                 {
@@ -147,10 +150,9 @@ pub fn get_os<T: AsRef<OsStr>>(name: T) -> Option<OsString> {
                     //Unix is better because it accepts constructing OsStr from a byte buffer.
                     let key = OsStr::from_bytes(&data[..pos]);
                     let value = OsStr::from_bytes(&data[pos + 1..]);
-                    insert_key_value(&mut cache, key, value);
-                }
-                if let Some(val) = cache.get(name.as_ref()) {
-                    return val.clone();
+                    if let Some(res) = check_insert_key_value(&mut cache, name.as_ref(), key, value) {
+                        return res;
+                    }
                 }
             }
         }
