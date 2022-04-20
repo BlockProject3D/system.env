@@ -26,16 +26,17 @@
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+use once_cell::sync::Lazy;
 use std::collections::HashMap;
 use std::ffi::{OsStr, OsString};
 use std::fs::File;
 use std::io::{BufRead, BufReader};
-use once_cell::sync::Lazy;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 
 static PATHS: Lazy<Mutex<Vec<PathBuf>>> = Lazy::new(|| Mutex::new(Vec::new()));
-static ENV_CACHE: Lazy<Mutex<HashMap<OsString, Option<OsString>>>> = Lazy::new(|| Mutex::new(HashMap::new()));
+static ENV_CACHE: Lazy<Mutex<HashMap<OsString, Option<OsString>>>> =
+    Lazy::new(|| Mutex::new(HashMap::new()));
 
 /// Adds a new override path.
 ///
@@ -65,8 +66,11 @@ pub fn add_override_path(path: &Path) {
     lock1.clear();
 }
 
-fn insert_key_value(cache: &mut HashMap<OsString, Option<OsString>>, key: impl AsRef<OsStr>,
-                    value: impl AsRef<OsStr>) {
+fn insert_key_value(
+    cache: &mut HashMap<OsString, Option<OsString>>,
+    key: impl AsRef<OsStr>,
+    value: impl AsRef<OsStr>,
+) {
     if value.as_ref().is_empty() {
         cache.insert(key.as_ref().into(), None);
     } else {
@@ -78,11 +82,11 @@ fn insert_key_value(cache: &mut HashMap<OsString, Option<OsString>>, key: impl A
 fn windows_path(cache: &mut HashMap<OsString, Option<OsString>>, data: &[u8], pos: usize) -> bool {
     let key = match std::str::from_utf8(&data[..pos]) {
         Ok(v) => v,
-        Err(_) => return false
+        Err(_) => return false,
     };
     let value = match std::str::from_utf8(&data[pos + 1..]) {
         Ok(v) => v,
-        Err(_) => return false
+        Err(_) => return false,
     };
     insert_key_value(cache, key, value);
     true
@@ -103,7 +107,7 @@ pub fn get_os<T: AsRef<OsStr>>(name: T) -> Option<OsString> {
     {
         // Attempt to pull from the cache.
         if let Some(val) = cache.get(name.as_ref()) {
-            return val.clone()
+            return val.clone();
         }
     }
     {
@@ -112,7 +116,7 @@ pub fn get_os<T: AsRef<OsStr>>(name: T) -> Option<OsString> {
             cache.insert(name.as_ref().into(), Some(val));
         }
         if let Some(val) = cache.get(name.as_ref()) {
-            return val.clone()
+            return val.clone();
         }
     }
     {
@@ -121,17 +125,17 @@ pub fn get_os<T: AsRef<OsStr>>(name: T) -> Option<OsString> {
         for v in &*lock {
             let file = match File::open(v) {
                 Ok(v) => BufReader::new(v),
-                Err(_) => continue
+                Err(_) => continue,
             };
             for v in file.split(b'\n') {
                 let data = match v {
                     Ok(v) => v,
-                    Err(_) => break // If an IO error has occurred, skip loading the file
-                    // completely.
+                    Err(_) => break, // If an IO error has occurred, skip loading the file
+                                     // completely.
                 };
                 let pos = match data.iter().position(|v| *v == b'=') {
                     Some(v) => v,
-                    None => continue
+                    None => continue,
                 };
                 #[cfg(windows)]
                 if !windows_path(&mut cache, &data, pos) {
@@ -146,7 +150,7 @@ pub fn get_os<T: AsRef<OsStr>>(name: T) -> Option<OsString> {
                     insert_key_value(&mut cache, key, value);
                 }
                 if let Some(val) = cache.get(name.as_ref()) {
-                    return val.clone()
+                    return val.clone();
                 }
             }
         }
@@ -184,6 +188,6 @@ pub fn get_bool<T: AsRef<OsStr>>(name: T) -> Option<bool> {
     match &*get(name)? {
         "off" | "OFF" | "FALSE" | "false" | "0" => Some(false),
         "on" | "ON" | "TRUE" | "true" | "1" => Some(true),
-        _ => None
+        _ => None,
     }
 }
