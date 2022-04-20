@@ -3,5 +3,5 @@ include:
       file: lib-template.yml
 
 variables:
-    CRATE_NAME: test
-    PROJECT_NAME: Test
+    CRATE_NAME: bp3d-env
+    PROJECT_NAME: Env
