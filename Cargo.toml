@@ -1,6 +1,6 @@
 [package]
 name = "bp3d-env"
-version = "1.0.0"
+version = "1.0.1"
 authors = ["Yuri Edward <yuri6037@outlook.com>"]
 edition = "2021"
 description = "Environment utilities with environment override file to support systems with difficult to no access to environment variables."
