@@ -6,4 +6,5 @@ Environment utilities with environment override file to support systems with dif
 
 This is used in BlockProject 3D to provide simpler access to environment variables.
 
-**This is not intended as a replacement to proper configuration. This is instead designed to support specific debugging tools.**
+**This is not intended as a replacement to proper configuration. This is instead designed to support specific startup configuration,
+usually needed for debugging tools.**
