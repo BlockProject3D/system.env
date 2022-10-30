@@ -1,7 +1,0 @@
-include:
-    - project: bp3d/cargo-gitlab
-      file: lib-template.yml
-
-variables:
-    CRATE_NAME: bp3d-env
-    PROJECT_NAME: Env
