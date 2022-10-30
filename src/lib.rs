@@ -70,7 +70,7 @@ fn check_insert_key_value(
     cache: &mut HashMap<OsString, Option<OsString>>,
     searched: impl AsRef<OsStr>,
     key: impl AsRef<OsStr>,
-    value: impl AsRef<OsStr>
+    value: impl AsRef<OsStr>,
 ) -> Option<Option<OsString>> {
     if key.as_ref() == searched.as_ref() {
         if value.as_ref().is_empty() {
@@ -85,7 +85,12 @@ fn check_insert_key_value(
 }
 
 #[cfg(windows)]
-fn windows_path(cache: &mut HashMap<OsString, Option<OsString>>, searched: impl AsRef<OsStr>, data: &[u8], pos: usize) -> Option<Option<OsString>> {
+fn windows_path(
+    cache: &mut HashMap<OsString, Option<OsString>>,
+    searched: impl AsRef<OsStr>,
+    data: &[u8],
+    pos: usize,
+) -> Option<Option<OsString>> {
     let key = match std::str::from_utf8(&data[..pos]) {
         Ok(v) => v,
         Err(_) => return None,
@@ -150,7 +155,8 @@ pub fn get_os<T: AsRef<OsStr>>(name: T) -> Option<OsString> {
                     //Unix is better because it accepts constructing OsStr from a byte buffer.
                     let key = OsStr::from_bytes(&data[..pos]);
                     let value = OsStr::from_bytes(&data[pos + 1..]);
-                    if let Some(res) = check_insert_key_value(&mut cache, name.as_ref(), key, value) {
+                    if let Some(res) = check_insert_key_value(&mut cache, name.as_ref(), key, value)
+                    {
                         return res;
                     }
                 }
